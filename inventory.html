@@ -1,0 +1,1043 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Inventory</title>
+  <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?display=swap&family=Inter:wght@400;500;700;900&family=Noto+Sans:wght@400;500;700;900">
+  <link rel="icon" type="image/x-icon" href="data:image/x-icon;base64,">
+  <style>
+    :root {
+      --bg-primary: #ffffff;
+      --bg-secondary: #e4e7ec;
+      --bg-hover: #d0d5dd;  
+      --text-primary: #1a1d21;     
+      --text-secondary: #5a6b7d;   
+      --border-color: #cdd3db;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', 'Noto Sans', sans-serif;
+      background-color: var(--bg-primary);
+      color: var(--text-primary);
+      min-height: 100vh;
+    }
+
+    .app-container {
+      position: relative;
+      display: flex;
+      min-height: 100vh;
+      flex-direction: column;
+      background-color: var(--bg-primary);
+      overflow-x: hidden;
+      width: 100%;
+    }
+
+    .layout-container {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      flex-grow: 1;
+    }
+
+    /* Main layout */
+    .content-layout {
+      display: flex;
+      gap: 4px;
+      padding: 20px 24px;
+      flex: 1;
+      justify-content: center;
+    }
+
+    .brand-logo {
+      width: 20px;
+      height: 20px;
+    }
+
+    /* Sidebar styles */
+    .sidebar {
+      width: 320px;
+      min-height: 700px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      background-color: var(--bg-primary);
+      padding: 16px;
+    }
+
+    .user-info {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .user-avatar {
+      background-position: center;
+      background-repeat: no-repeat;
+      background-size: cover;
+      aspect-ratio: 1/1;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+    }
+
+    .user-name {
+      font-size: 16px;
+      font-weight: 500;
+    }
+
+    .nav-menu {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 16px;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 8px 12px;
+      border-radius: 8px;
+      text-decoration: none;
+      color: var(--text-primary);
+    }
+
+    .nav-item.active {
+      background-color: var(--bg-secondary);
+    }
+
+    .nav-icon {
+      width: 24px;
+      height: 24px;
+    }
+
+    .nav-label {
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    .menu-toggle {
+      display: none;
+      flex-direction: column;
+      gap: 5px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 4px;
+      margin-right: 8px;
+      z-index: 1100;
+    }
+
+    .menu-toggle .bar {
+      width: 24px;
+      height: 3px;
+      background-color: var(--text-primary);
+      border-radius: 2px;
+    }
+
+    /* Main content styles */
+    .main-content {
+      flex-grow: 1;
+      max-width: 960px;
+    }
+
+    .page-header {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 16px;
+      flex-wrap: wrap;
+    }
+
+    .page-title {
+      font-size: 32px;
+      font-weight: 700;
+      line-height: 1.2;
+      min-width: 288px;
+    }
+
+    .update-button {
+      display: flex;
+      min-width: 84px;
+      max-width: 480px;
+      cursor: pointer;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      border-radius: 8px;
+      height: 32px;
+      background-color: var(--bg-secondary);
+      color: var(--text-primary);
+      font-size: 14px;
+      font-weight: 500;
+      padding: 0 16px;
+      border: none;
+    }
+
+    .section-title {
+      font-size: 22px;
+      font-weight: 700;
+      line-height: 1.2;
+      letter-spacing: -0.015em;
+      padding: 0 16px 12px;
+      padding-top: 20px;
+    }
+
+    .product-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(158px, 1fr));
+      gap: 12px;
+      padding: 16px;
+    }
+
+    .product-card {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 16px;
+      background-color: var(--bg-primary);
+    }
+
+    .product-card.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .product-icon {
+      width: 24px;
+      height: 24px;
+      color: var(--text-primary);
+    }
+
+    .product-name {
+      font-size: 16px;
+      font-weight: 700;
+    }
+
+    .product-quantity {
+      font-size: 14px;
+      font-weight: 400;
+      color: var(--text-secondary);
+    }
+
+    .table-container {
+      max-height: 500px;
+      overflow-y: auto;
+      overflow-x: auto;
+      padding: 12px 16px;
+      container-type: inline-size;
+    }
+
+    .data-table {
+      min-width: 700px;
+      width: 100%;
+      border-collapse: collapse;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      overflow: hidden;
+      background-color: var(--bg-primary);
+    }
+
+    .data-table thead tr {
+      background-color: var(--bg-primary);
+    }
+
+    .data-table th {
+      padding: 12px 16px;
+      text-align: left;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-primary);
+    }
+
+    .data-table td {
+      padding: 8px 16px;
+      height: 72px;
+      font-size: 14px;
+      font-weight: 400;
+    }
+
+    .table-product {
+      color: var(--text-primary);
+    }
+
+    .table-data {
+      color: var(--text-secondary);
+    }
+
+    .status-btn {
+      display: flex;
+      min-width: 84px;
+      max-width: 480px;
+      cursor: pointer;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      border-radius: 8px;
+      height: 32px;
+      background-color: var(--bg-secondary);
+      color: var(--text-primary);
+      font-size: 14px;
+      font-weight: 500;
+      width: 100%;
+      padding: 0 16px;
+      border: none;
+    }
+
+    .data-table tbody tr {
+      border-top: 1px solid var(--border-color);
+    }
+
+    #batch-checkboxes {
+      max-height: 300px;
+      overflow-x: auto;
+      overflow-y: auto;
+    }
+
+    .batch-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+      font-size: 14px;
+    }
+    
+
+    .batch-table th, .batch-table td {
+      border: 1px solid #ccc;
+      padding: 8px 12px;
+      text-align: left;
+    }
+
+    .batch-table th {
+      background-color: #f5f5f5;
+      font-weight: 600;
+    }
+
+    .batch-table tr:hover {
+      background-color: #f9f9f9;
+    }
+
+
+    /* Modal base */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background-color: rgba(0, 0, 0, 0.4);
+      justify-content: center;
+      align-items: center;
+    }
+
+    .mode-toggle {
+      display: flex;
+    }
+    .tab {
+      flex: 1;
+      text-align: center;
+      padding: 10px;
+      cursor: pointer;
+      background-color: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-bottom: none;
+      border-radius: 6px 6px 0 0;
+      font-weight: bold;
+      transition: background-color 0.3s ease;
+    }
+    .tab.selected {
+      background-color: var(--bg-primary);
+    }
+
+    .modal-content {
+      background-color: var(--bg-primary);
+      margin: auto;
+      padding: 20px;
+      border-radius: 10px;
+      width: 90%;
+      max-width: 500px;
+      position: relative;
+      font-family: 'Segoe UI', sans-serif;
+    }
+
+    .inventory-modal {
+      background: var(--bg-primary);
+      padding: 20px;
+      border-radius: 10px;
+      width: 100%;
+      max-width: 500px;
+      margin: auto;
+    }
+
+    .tabs {
+      display: flex;
+    }
+
+    .tab-button {
+      flex: 1;
+      background: var(--bg-secondary);
+      padding: 12px;
+      border: none;
+      cursor: pointer;
+      position: relative;
+      font-weight: 500;
+    }
+
+    .tab-button:not(:last-child) {
+      border-right: 1px solid var(--bg-primary);
+    }
+
+    .tab-button.active {
+      background: var(--bg-primary);
+      z-index: 1;
+      border-top-left-radius: 10px;
+      border-top-right-radius: 10px;
+      margin-bottom: -1px;
+      box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1);
+    }
+
+    .tab-content {
+      border: 1px solid var(--border-color);
+      border-top: none;
+      padding: 15px;
+      border-radius: 0 0 10px 10px;
+      background: var(--bg-primary);
+    }
+
+    .close {
+      position: absolute;
+      top: 10px;
+      right: 20px;
+      font-size: 24px;
+      cursor: pointer;
+    }
+    
+    label {
+      display: block;
+      margin-top: 10px;
+      font-size: 14px;
+    }
+
+    input[type="text"],
+    input[type="number"],
+    input[type="date"],
+    select {
+      width: 100%;
+      padding: 8px 4px;
+      border: none;
+      border: 1px solid var(--border-color);
+      border-radius: 5px;
+      background: transparent;
+      font-size: 15px;
+      outline: none;
+      transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    input:focus,
+    select:focus {
+      border-color: var(--bg-secondary);
+      box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+    }
+
+
+    .submit-btn, .open-btn {
+      display: block;
+      margin: 20px auto 0px auto;
+      padding: 10px 16px;
+      background-color: var(--bg-secondary);
+      color: var(--text-primary);
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 15px;
+      border: 1px solid var(--border-color);
+    }
+
+    .submit-btn:hover, .open-btn:hover {
+      background-color: var(--bg-hover);
+    }
+
+    @media screen and (max-width: 480px) {
+      .modal-content {
+        width: 95%;
+        padding: 15px;
+      }
+
+      .close {
+        top: 5px;
+        right: 10px;
+      }
+    }
+
+    /* Responsive styles */
+    @media (max-width: 1200px) {
+
+      .user-info {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 56px;
+        padding: 0 16px;
+        background-color: var(--bg-primary);
+        display: flex;
+        align-items: center;
+        z-index: 1000;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+      }
+
+      .menu-toggle {
+        display: flex;
+      }
+
+      .sidebar {
+        position: fixed;
+        top: 56px;
+        left: -320px;
+        width: 280px;
+        height: 100%;
+        background-color: var(--bg-primary);
+        transition: left 0.3s ease;
+        z-index: 1000;
+        box-shadow: 2px 0 6px rgba(0, 0, 0, 0.1);
+      }
+
+      .sidebar.open {
+        left: 0;
+      }
+
+      .content-layout {
+        padding-top: 56px; /* push content below fixed top bar */
+        flex-direction: column;
+      }
+    }
+    
+    @media (min-width: 1201px) {
+      .sidebar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        height: 100vh;
+        overflow-y: auto;
+        margin-left: 30px;
+        margin-top: 20px;
+      }
+
+      .content-layout {
+        margin-left: 320px;
+      }
+
+      .main-content {
+        justify-content: center;
+      }
+    }
+
+    .main-content {
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity 0.6s ease, transform 0.6s ease;
+    }
+    .main-content.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .days-red {
+      color: #e74c3c;
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-weight: bold;
+    }
+    .days-orange {
+      color: #f39c12;
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-weight: bold;
+    }
+    .days-green {
+      color: #27ae60;
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-weight: bold;
+    }
+
+  </style>
+</head>
+<body>
+  <div class="app-container">
+    <div class="layout-container">
+      <div class="content-layout">
+        <!-- Sidebar -->
+        <div class="sidebar">
+          <div class="sidebar-content">
+            <div class="user-info">
+              <button class="menu-toggle" onclick="toggleMenu()" aria-label="Toggle Menu">
+                <div class="bar"></div>
+                <div class="bar"></div>
+                <div class="bar"></div>
+              </button>
+              <svg class="brand-logo" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path
+                  d="M13.8261 30.5736C16.7203 29.8826 20.2244 29.4783 24 29.4783C27.7756 29.4783 31.2797 29.8826 34.1739 30.5736C36.9144 31.2278 39.9967 32.7669 41.3563 33.8352L24.8486 7.36089C24.4571 6.73303 23.5429 6.73303 23.1514 7.36089L6.64374 33.8352C8.00331 32.7669 11.0856 31.2278 13.8261 30.5736Z"
+                  fill="currentColor"
+                ></path>
+                <path
+                  fill-rule="evenodd"
+                  clip-rule="evenodd"
+                  d="M39.998 35.764C39.9944 35.7463 39.9875 35.7155 39.9748 35.6706C39.9436 35.5601 39.8949 35.4259 39.8346 35.2825C39.8168 35.2403 39.7989 35.1993 39.7813 35.1602C38.5103 34.2887 35.9788 33.0607 33.7095 32.5189C30.9875 31.8691 27.6413 31.4783 24 31.4783C20.3587 31.4783 17.0125 31.8691 14.2905 32.5189C12.0012 33.0654 9.44505 34.3104 8.18538 35.1832C8.17384 35.2075 8.16216 35.233 8.15052 35.2592C8.09919 35.3751 8.05721 35.4886 8.02977 35.589C8.00356 35.6848 8.00039 35.7333 8.00004 35.7388C8.00004 35.739 8 35.7393 8.00004 35.7388C8.00004 35.7641 8.0104 36.0767 8.68485 36.6314C9.34546 37.1746 10.4222 37.7531 11.9291 38.2772C14.9242 39.319 19.1919 40 24 40C28.8081 40 33.0758 39.319 36.0709 38.2772C37.5778 37.7531 38.6545 37.1746 39.3151 36.6314C39.9006 36.1499 39.9857 35.8511 39.998 35.764ZM4.95178 32.7688L21.4543 6.30267C22.6288 4.4191 25.3712 4.41909 26.5457 6.30267L43.0534 32.777C43.0709 32.8052 43.0878 32.8338 43.104 32.8629L41.3563 33.8352C43.104 32.8629 43.1038 32.8626 43.104 32.8629L43.1051 32.865L43.1065 32.8675L43.1101 32.8739L43.1199 32.8918C43.1276 32.906 43.1377 32.9246 43.1497 32.9473C43.1738 32.9925 43.2062 33.0545 43.244 33.1299C43.319 33.2792 43.4196 33.489 43.5217 33.7317C43.6901 34.1321 44 34.9311 44 35.7391C44 37.4427 43.003 38.7775 41.8558 39.7209C40.6947 40.6757 39.1354 41.4464 37.385 42.0552C33.8654 43.2794 29.133 44 24 44C18.867 44 14.1346 43.2794 10.615 42.0552C8.86463 41.4464 7.30529 40.6757 6.14419 39.7209C4.99695 38.7775 3.99999 37.4427 3.99999 35.7391C3.99999 34.8725 4.29264 34.0922 4.49321 33.6393C4.60375 33.3898 4.71348 33.1804 4.79687 33.0311C4.83898 32.9556 4.87547 32.8935 4.9035 32.8471C4.91754 32.8238 4.92954 32.8043 4.93916 32.7889L4.94662 32.777L4.95178 32.7688ZM35.9868 29.004L24 9.77997L12.0131 29.004C12.4661 28.8609 12.9179 28.7342 13.3617 28.6282C16.4281 27.8961 20.0901 27.4783 24 27.4783C27.9099 27.4783 31.5719 27.8961 34.6383 28.6282C35.082 28.7342 35.5339 28.8609 35.9868 29.004Z"
+                  fill="currentColor"
+                ></path>
+              </svg>
+              <h2 class="user-name">Flavi Dairy Solutions</h2>
+            </div>
+            
+            <div class="nav-menu">
+              <a href="/static/index.html" class="nav-item">
+                <div class="nav-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" viewBox="0 0 256 256">
+                        <path d="M218.83,103.77l-80-75.48a1.14,1.14,0,0,1-.11-.11,16,16,0,0,0-21.53,0l-.11.11L37.17,103.77A16,16,0,0,0,32,115.55V208a16,16,0,0,0,16,16H96a16,16,0,0,0,16-16V160h32v48a16,16,0,0,0,16,16h48a16,16,0,0,0,16-16V115.55A16,16,0,0,0,218.83,103.77ZM208,208H160V160a16,16,0,0,0-16-16H112a16,16,0,0,0-16,16v48H48V115.55l.11-.1L128,40l79.9,75.43.11.1Z"></path>
+                    </svg>
+                </div>
+                <p class="nav-label">Dashboard</p>
+              </a>
+              
+              <a href="#" class="nav-item active">
+                <div class="nav-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" viewBox="0 0 256 256">
+                        <path d="M223.68,66.15,135.68,18a15.88,15.88,0,0,0-15.36,0l-88,48.17a16,16,0,0,0-8.32,14v95.64a16,16,0,0,0,8.32,14l88,48.17a15.88,15.88,0,0,0,15.36,0l88-48.17a16,16,0,0,0,8.32-14V80.18A16,16,0,0,0,223.68,66.15ZM128,32l80.35,44L178.57,92.29l-80.35-44Zm0,88L47.65,76,81.56,57.43l80.35,44Zm88,55.85h0l-80,43.79V133.83l32-17.51V152a8,8,0,0,0,16,0V107.56l32-17.51v85.76Z"></path>
+                    </svg>
+                </div>
+                <p class="nav-label">Inventory</p>
+              </a>
+              
+              <a href="/static/forecast.html" class="nav-item">
+                <div class="nav-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" viewBox="0 0 256 256">
+                        <path d="M216,40H136V24a8,8,0,0,0-16,0V40H40A16,16,0,0,0,24,56V176a16,16,0,0,0,16,16H79.36L57.75,219a8,8,0,0,0,12.5,10l29.59-37h56.32l29.59,37a8,8,0,1,0,12.5-10l-21.61-27H216a16,16,0,0,0,16-16V56A16,16,0,0,0,216,40Zm0,136H40V56H216V176ZM104,120v24a8,8,0,0,1-16,0V120a8,8,0,0,1,16,0Zm32-16v40a8,8,0,0,1-16,0V104a8,8,0,0,1,16,0Zm32-16v56a8,8,0,0,1-16,0V88a8,8,0,0,1,16,0Z"></path>
+                    </svg>
+                </div>
+                <p class="nav-label">Forecasting</p>
+              </a>
+              
+              <a href="/static/about.html" class="nav-item">
+                <div class="nav-icon">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" viewBox="0 0 256 256">
+                    <path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216Zm16-40a8,8,0,0,1-8,8,16,16,0,0,1-16-16V128a8,8,0,0,1,0-16,16,16,0,0,1,16,16v40A8,8,0,0,1,144,176ZM112,84a12,12,0,1,1,12,12A12,12,0,0,1,112,84Z"></path>
+                  </svg>
+                </div>
+                <p class="nav-label">About</p>
+              </a>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Main Content -->
+        <main class="main-content">
+          <div class="page-header">
+            <h1 class="page-title">Inventory Overview</h1>
+            <button onclick="openModal()" class="update-button">Update Inventory</button>
+          </div>
+          
+          <h2 class="section-title">Product Stock Summary</h2>
+          <div class="product-grid">
+            <!-- stock summary cards will be dynamically generated here -->
+          </div>
+          
+          <h2 class="section-title">Batch-wise Inventory</h2>
+          <div class="table-container">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th class="column-product">Product Name</th>
+                  <th class="column-batch">Batch ID</th>
+                  <th class="column-quantity">Quantity in Batch</th>
+                  <th class="column-production">Production Date</th>
+                  <th class="column-expiration">Expiration Date</th>
+                  <th class="column-days">Days to Expire</th>
+                </tr>
+              </thead>
+              <tbody id="batchInventoryBody">
+                <!-- Batch-wise inventory rows will be dynamically generated here -->
+              </tbody>
+            </table>
+          </div>
+        </main>
+      </div>
+    </div>
+  </div>
+
+  <!-- Inventory Modal -->
+  <div id="inventoryModal" class="modal">
+    <div class="modal-content">
+      <span class="close" onclick="closeModal()">&times;</span>
+      <h2>Inventory Management</h2>
+      <br>
+      <!-- Mode Toggle as tab-style boxes -->
+      <div class="mode-toggle tabs">
+        <div class="tab selected" id="tab-add" onclick="selectMode('add'); showTab('add');">Add Stock</div>
+        <div class="tab" id="tab-update" onclick="selectMode('update'); showTab('update');">Update Stock</div>
+      </div>
+
+      <!-- Add Stock Section -->
+      <form id="add" class="tab-content" style="display: block;">
+        <label for="add-product">Product Name:</label>
+        <select id="add-product" required>
+          <option selected disabled>Select product</option>
+          <option value=1>Milk</option>
+          <option value=2>Butter</option>
+          <option value=3>Cheese</option>
+          <option value=4>Yogurt</option>
+          <option value=5>Ice Cream</option>
+          <option value=6>Curd</option>
+          <option value=7>Lassi</option>
+          <option value=8>Buttermilk</option>
+          <option value=9>Paneer</option>
+          <option value=10>Ghee</option>
+        </select>
+
+        <label for="add-quantity">Batch Quantity:</label>
+        <input type="number" id="add-quantity" placeholder="Enter batch quantity" min="1" required>
+
+        <label for="add-production">Production Date:</label>
+        <input type="date" id="add-production" placeholder="Select production date" required>
+
+        <label for="add-expiry">Expiration Date:</label>
+        <input type="date" id="add-expiry" placeholder="Select expiration date" required>
+
+        <input type="submit" class="submit-btn" value="Add to Inventory">
+      </form>
+
+      <!-- Update Stock Section -->
+      <form id="update" class="tab-content" style="display: none;">
+        <label for="update-product">Product Name:</label>
+        <select id="update-product" required>
+          <option selected disabled>Select product</option>
+          <option value=1>Milk</option>
+          <option value=2>Butter</option>
+          <option value=3>Cheese</option>
+          <option value=4>Yogurt</option>
+          <option value=5>Ice Cream</option>
+          <option value=6>Curd</option>
+          <option value=7>Lassi</option>
+          <option value=8>Buttermilk</option>
+          <option value=9>Paneer</option>
+          <option value=10>Ghee</option>
+        </select>
+
+        <label for="update-batch">Select Batch:</label>
+        <div id="batch-checkboxes" style="margin-top: 10px;"></div>
+
+        <label for="update-quantity">Quantity to Remove:</label>
+        <input type="number" id="update-quantity" style="background-color: var(--bg-secondary);" value="0" disabled>
+
+        <label for="update-date">Delivered On:</label>
+        <input type="date" id="update-date" required>
+
+        <input type="submit" class="submit-btn" value="Update Stock">
+      </form>
+    </div>
+  </div>
+
+  </div>
+
+  <script>
+    function toggleMenu() {
+      const sidebar = document.querySelector('.sidebar');
+      sidebar.classList.toggle('open');
+    }
+
+    function openModal() {
+      document.getElementById('inventoryModal').style.display = 'flex';
+    }
+
+    function closeModal() {
+      document.getElementById('inventoryModal').style.display = 'none';
+    }
+
+    function selectMode(mode) {
+      const addTab = document.getElementById('tab-add');
+      const updateTab = document.getElementById('tab-update');
+      const addSection = document.getElementById('add');
+      const updateSection = document.getElementById('update');
+
+      if (mode === 'add') {
+        addTab.classList.add('selected');
+        updateTab.classList.remove('selected');
+        addSection.style.display = 'block';
+        updateSection.style.display = 'none';
+      } else {
+        addTab.classList.remove('selected');
+        updateTab.classList.add('selected');
+        addSection.style.display = 'none';
+        updateSection.style.display = 'block';
+      }
+    }
+
+    function showTab(tab) {
+      const buttons = document.querySelectorAll('.tab');
+      buttons.forEach(btn => btn.classList.remove('active'));
+
+      if (tab === 'add') {
+        buttons[0].classList.add('active');
+      } else {
+        buttons[1].classList.add('active');
+      }
+
+      // You can toggle form visibility based on tab here
+    }
+
+    document.getElementById('update-product').addEventListener('change', async function() {
+      const product = this.value;
+      const container = document.getElementById('batch-checkboxes');
+      container.innerHTML = `
+        <table class="batch-table">
+          <thead>
+            <tr>
+              <th>Select</th>
+              <th>Batch ID</th>
+              <th>Quantity</th>
+              <th>Production Date</th>
+              <th>Expiry Date</th>
+            </tr>
+          </thead>
+          <tbody id="batch-table-body"></tbody>
+        </table>`;
+
+      document.getElementById('update-quantity').value = 0; // Reset quantity field
+      
+      if (!product) return;
+
+      try {
+        const response = await fetch('/get-batches', 
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ product_id: product })
+        });
+        const batches = await response.json();
+
+        if (batches.length === 0) {
+          container.innerHTML = '<p style="color: gray;">This product currently has no stock.</p>';
+          return;
+        }
+
+        const tbody = container.querySelector('#batch-table-body');
+
+        batches.forEach(batch => {
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td><input type="checkbox" class="batch-checkbox" name="batches" value="${batch.batch_id}"></td>
+            <td>${batch.batch_id}</td>
+            <td>${batch.quantity} units</td>
+            <td>${batch.production_date}</td>
+            <td>${batch.expiry_date}</td>
+          `;
+          tbody.appendChild(row);
+        });
+
+      } catch (error) {
+        console.error('Error fetching batches:', error);
+        alert('Failed to connect to the server. Please try again later.');
+        return;
+      }
+
+    });
+
+    // Function to calculate and return selected batches
+    function getSelectedBatches() {
+      const checkboxes = document.querySelectorAll('.batch-checkbox:checked');
+      const selected = [];
+      let totalQuantity = 0;
+
+      checkboxes.forEach(cb => {
+        const row = cb.closest('tr');
+        if (row) {
+          const quantityCell = row.querySelectorAll('td')[2];
+          if (quantityCell) {
+            const qtyText = quantityCell.textContent.trim().match(/\d+(\.\d+)?/);
+            const qty = qtyText ? parseFloat(qtyText[0]) : 0;
+            if (!isNaN(qty)) {
+              totalQuantity += qty;
+            }
+          }
+        }
+        selected.push(cb.value); // batch_id
+      });
+
+      // Show total in disabled input field
+      document.getElementById('update-quantity').value = totalQuantity;
+
+      return {
+        batches: selected,
+        totalQuantity: totalQuantity
+      };
+    }
+
+    // Trigger quantity update when checkbox is changed
+    document.addEventListener('change', function (e) {
+      if (e.target.classList.contains('batch-checkbox')) {
+        getSelectedBatches();
+      }
+    });
+
+    // Form submit example to send selected data
+    document.getElementById('update').addEventListener('submit', async function (e) {
+      e.preventDefault();
+      const selected = getSelectedBatches();
+      const deliveryDate = document.getElementById('update-date').value;
+
+      if (selected.batches.length === 0) {
+        alert('Please select at least one batch.');
+        return;
+      }
+
+      const payload = {
+        batch_ids: selected.batches,
+        delivered_on: deliveryDate,
+        quantity_removed: selected.totalQuantity
+      };
+
+      try {
+        const response = await fetch('/update-stock', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(payload)
+        });
+
+        const result = await response.json();
+        alert(result.message);
+        if (result.message === 'Stock updated and sale recorded successfully!') {
+          window.location.reload();
+        }
+      } catch (err) {
+        console.error(err);
+        alert('Error updating stock');
+      }
+    });
+
+
+    //stock add functionality
+    document.getElementById('add').addEventListener('submit', async function (e) {
+      e.preventDefault();
+
+      const formData = {
+        product_id: parseInt(document.getElementById('add-product').value),
+        quantity: parseFloat(document.getElementById('add-quantity').value),
+        production_date: document.getElementById('add-production').value,
+        expiry_date: document.getElementById('add-expiry').value
+      };
+
+      try {
+        const response = await fetch('/add-stock', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(formData)
+        });
+
+        const result = await response.json();
+        alert(result.message);
+        if (result.message === 'Stock added successfully!') {
+          window.location.reload();
+        }
+      } catch (error) {
+        console.error('Error adding stock:', error);
+        alert('Failed to connect to the server. Please try again later.');
+      }
+    });
+
+
+    //Update the live stock data from database
+    async function loadProductSummary() {
+      try {
+        const response = await fetch('/product-summary');
+        const data = await response.json();
+
+        const container = document.querySelector('.product-grid');
+        container.innerHTML = ''; // Clear previous content
+
+        data.forEach(item => {
+          const card = document.createElement('div');
+          card.className = 'product-card';
+          card.innerHTML = `
+            <h3 class="product-name">${item.product_names}</h3>
+            <p class="product-quantity">${item.total_quantity} ${item.unit}</p>
+          `;
+          container.appendChild(card);
+        });
+      } catch (err) {
+        console.error('Error loading product summary:', err);
+        alert(err.message);
+      }
+    }
+
+
+    async function loadBatchInventory() {
+      try {
+        const response = await fetch("/batch-inventory");
+        const data = await response.json();
+
+        const tbody = document.getElementById("batchInventoryBody");
+        tbody.innerHTML = ""; // Clear existing rows
+
+        data.forEach(item => {
+          const row = document.createElement("tr");
+
+          // Create colored Days to Expire cell
+          const daysCell = document.createElement("td");
+          daysCell.textContent = item.days_to_expire;
+          daysCell.classList.add("table-data");
+
+          if (item.days_to_expire <= 3) {
+            daysCell.classList.add("days-red");
+          } else if (item.days_to_expire <= 7) {
+            daysCell.classList.add("days-orange");
+          } else {
+            daysCell.classList.add("days-green");
+          }
+
+          row.innerHTML = `
+            <td class="table-product">${item.product_name}</td>
+            <td class="table-data">${item.batch_id}</td>
+            <td class="table-data">${item.quantity}</td>
+            <td class="table-data">${item.production_date}</td>
+            <td class="table-data">${item.expiration_date}</td>
+          `;
+
+          row.appendChild(daysCell);
+          tbody.appendChild(row);
+        });
+      } catch (error) {
+        console.error("Error loading inventory:", error);
+      }
+    }
+
+    window.addEventListener('DOMContentLoaded', loadProductSummary);
+    window.addEventListener('DOMContentLoaded', loadBatchInventory);
+
+    window.addEventListener('DOMContentLoaded', () => {
+      setTimeout(() => {
+        document.querySelector('.main-content').classList.add('visible');
+      }, 350); // Delay of 0.5 seconds
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Flavi Dairy - Demand Forecasting</title>
+  <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&family=Noto+Sans:wght@400;500;700;900&display=swap">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    /* CSS Variables */
+    :root {
+      --bg-primary: #ffffff;
+      --bg-secondary: #f0f2f5;
+      --text-primary: #111418;
+      --text-secondary: #60758a;
+      --border-color: #dbe0e6;
+      --color-graph-fill-start: #e6edf4;
+      --color-graph-fill-end: rgba(230, 237, 244, 0);
+      --color-graph-stroke: #4574a1;
+      --spacing-xs: 0.25rem;
+      --spacing-sm: 0.5rem;
+      --spacing-md: 1rem;
+      --spacing-lg: 1.5rem;
+      --spacing-xl: 2rem;
+      --sidebar-width: 320px;
+      --content-max-width: 960px;
+      --border-radius: 0.5rem;
+      --past-color: #6c757d;
+      --forecast-color: #4574a1;
+      --critical-color: #dc3545;
+      --moderate-color: #ffc107;
+      --sufficient-color: #28a745;
+    }
+
+    /* Base Styles */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', 'Noto Sans', sans-serif;
+      background-color: var(--bg-primary);
+      color: var(--text-primary);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    .app-container {
+      position: relative;
+      display: flex;
+      min-height: 100vh;
+      flex-direction: column;
+      background-color: var(--bg-primary);
+      overflow-x: hidden;
+      width: 100%;
+    }
+
+    .layout-container {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      flex-grow: 1;
+    }
+
+    /* Main layout */
+    .content-layout {
+      display: flex;
+      gap: 4px;
+      padding: 20px 24px;
+      flex: 1;
+      justify-content: center;
+    }
+
+    .brand-logo {
+      width: 20px;
+      height: 20px;
+    }
+
+    /* Sidebar styles */
+    .sidebar {
+      width: 320px;
+      min-height: 700px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      background-color: var(--bg-primary);
+      padding: 16px;
+    }
+
+    .user-info {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .user-avatar {
+      background-position: center;
+      background-repeat: no-repeat;
+      background-size: cover;
+      aspect-ratio: 1/1;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+    }
+
+    .user-name {
+      font-size: 16px;
+      font-weight: 500;
+    }
+
+    .nav-menu {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 16px;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 8px 12px;
+      border-radius: 8px;
+      text-decoration: none;
+      color: var(--text-primary);
+    }
+
+    .nav-item.active {
+      background-color: var(--bg-secondary);
+    }
+
+    .nav-icon {
+      width: 24px;
+      height: 24px;
+    }
+
+    .nav-label {
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    .menu-toggle {
+      display: none;
+      flex-direction: column;
+      gap: 5px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 4px;
+      margin-right: 8px;
+      z-index: 1100;
+    }
+
+    .menu-toggle .bar {
+      width: 24px;
+      height: 3px;
+      background-color: var(--text-primary);
+      border-radius: 2px;
+    }
+
+    /* Main Content */
+    .main-content {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      max-width: var(--content-max-width);
+    }
+
+    .page-header {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: var(--spacing-md);
+      padding: var(--spacing-md);
+    }
+
+    .page-title {
+      font-size: 2rem;
+      font-weight: 700;
+      letter-spacing: -0.015em;
+      line-height: 1.2;
+      min-width: 288px;
+    }
+
+    .page-description {
+      font-size: 1rem;
+      font-weight: 400;
+      line-height: normal;
+      padding: 0 var(--spacing-md);
+      padding-bottom: var(--spacing-md);
+    }
+
+    /* Forecast Grid */
+    .forecast-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+      padding: 0 var(--spacing-md);
+    }
+
+    .forecast-card {
+      background: #ffffff;
+      border-radius: 16px;
+      padding: 16px;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.05);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .forecast-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 6px 12px rgba(0,0,0,0.1);
+    }
+
+    .forecast-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 600;
+      font-size: 1rem;
+      margin-bottom: 12px;
+    }
+
+    .forecast-icon {
+      font-size: 22px;
+      background-color: #e2e8f0;
+      color: #334155;
+      border-radius: 50%;
+      width: 30px;
+      height: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .forecast-canvas {
+      width: 100% !important; /* Important to override Chart.js inline styles */
+      height: 200px !important;
+      margin: 12px 0;
+    }
+
+    .stats {
+      margin-top: 12px;
+    }
+
+    .stats p {
+      font-size: 0.9rem;
+      margin: 4px 0;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .stats p span:last-child {
+      font-weight: 500;
+    }
+
+    .status {
+      font-weight: bold;
+      padding: 4px 8px;
+      border-radius: 4px;
+      display: inline-block;
+    }
+
+    .status.Critical { 
+      color: #dc2626;
+      background-color: #fee2e2;
+    }
+    .status.Moderate { 
+      color: #d97706;
+      background-color: #fef3c7;
+    }
+    .status.Sufficient { 
+      color: #16a34a;
+      background-color: #dcfce7;
+    }
+
+    .reorder {
+      background-color: #fff7ed;
+      color: #c2410c;
+      font-size: 0.85rem;
+      padding: 8px 10px;
+      border-radius: 8px;
+      margin-top: 10px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* Loading state */
+    .loading-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 300px;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .loading-spinner {
+      width: 40px;
+      height: 40px;
+      border: 4px solid rgba(69, 116, 161, 0.2);
+      border-top: 4px solid #4574a1;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    /* Error message */
+    .error-message {
+      padding: 1rem;
+      background-color: #ffebee;
+      color: #b71c1c;
+      border-radius: var(--border-radius);
+      margin: 1rem;
+      text-align: center;
+    }
+
+    /* Responsive styles */
+    @media (max-width: 1200px) {
+      .user-info {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 56px;
+        padding: 0 16px;
+        background-color: var(--bg-primary);
+        display: flex;
+        align-items: center;
+        z-index: 1000;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+      }
+
+      .menu-toggle {
+        display: flex;
+      }
+
+      .sidebar {
+        position: fixed;
+        top: 56px;
+        left: -320px;
+        width: 280px;
+        height: 100%;
+        background-color: var(--bg-primary);
+        transition: left 0.3s ease;
+        z-index: 1000;
+        box-shadow: 2px 0 6px rgba(0, 0, 0, 0.1);
+      }
+
+      .sidebar.open {
+        left: 0;
+      }
+
+      .content-layout {
+        padding-top: 56px;
+        flex-direction: column;
+      }
+    }
+    
+    @media (min-width: 1201px) {
+      .sidebar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        height: 100vh;
+        overflow-y: auto;
+        margin-left: 30px;
+        margin-top: 20px;
+      }
+
+      .content-layout {
+        margin-left: 320px;
+      }
+    }
+
+    .main-content {
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity 0.6s ease, transform 0.6s ease;
+    }
+    .main-content.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  </style>
+</head>
+<body>
+  <div class="app-container">
+    <div class="layout-container">
+      <div class="content-layout">
+        <!-- Sidebar -->
+        <div class="sidebar">
+          <div class="sidebar-content">
+            <div class="user-info">
+                <button class="menu-toggle" onclick="toggleMenu()" aria-label="Toggle Menu">
+                  <div class="bar"></div>
+                  <div class="bar"></div>
+                  <div class="bar"></div>
+                </button>
+                <svg class="brand-logo" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path
+                    d="M13.8261 30.5736C16.7203 29.8826 20.2244 29.4783 24 29.4783C27.7756 29.4783 31.2797 29.8826 34.1739 30.5736C36.9144 31.2278 39.9967 32.7669 41.3563 33.8352L24.8486 7.36089C24.4571 6.73303 23.5429 6.73303 23.1514 7.36089L6.64374 33.8352C8.00331 32.7669 11.0856 31.2278 13.8261 30.5736Z"
+                    fill="currentColor"
+                  ></path>
+                  <path
+                    fill-rule="evenodd"
+                    clip-rule="evenodd"
+                    d="M39.998 35.764C39.9944 35.7463 39.9875 35.7155 39.9748 35.6706C39.9436 35.5601 39.8949 35.4259 39.8346 35.2825C39.8168 35.2403 39.7989 35.1993 39.7813 35.1602C38.5103 34.2887 35.9788 33.0607 33.7095 32.5189C30.9875 31.8691 27.6413 31.4783 24 31.4783C20.3587 31.4783 17.0125 31.8691 14.2905 32.5189C12.0012 33.0654 9.44505 34.3104 8.18538 35.1832C8.17384 35.2075 8.16216 35.233 8.15052 35.2592C8.09919 35.3751 8.05721 35.4886 8.02977 35.589C8.00356 35.6848 8.00039 35.7333 8.00004 35.7388C8.00004 35.739 8 35.7393 8.00004 35.7388C8.00004 35.7641 8.0104 36.0767 8.68485 36.6314C9.34546 37.1746 10.4222 37.7531 11.9291 38.2772C14.9242 39.319 19.1919 40 24 40C28.8081 40 33.0758 39.319 36.0709 38.2772C37.5778 37.7531 38.6545 37.1746 39.3151 36.6314C39.9006 36.1499 39.9857 35.8511 39.998 35.764ZM4.95178 32.7688L21.4543 6.30267C22.6288 4.4191 25.3712 4.41909 26.5457 6.30267L43.0534 32.777C43.0709 32.8052 43.0878 32.8338 43.104 32.8629L41.3563 33.8352C43.104 32.8629 43.1038 32.8626 43.104 32.8629L43.1051 32.865L43.1065 32.8675L43.1101 32.8739L43.1199 32.8918C43.1276 32.906 43.1377 32.9246 43.1497 32.9473C43.1738 32.9925 43.2062 33.0545 43.244 33.1299C43.319 33.2792 43.4196 33.489 43.5217 33.7317C43.6901 34.1321 44 34.9311 44 35.7391C44 37.4427 43.003 38.7775 41.8558 39.7209C40.6947 40.6757 39.1354 41.4464 37.385 42.0552C33.8654 43.2794 29.133 44 24 44C18.867 44 14.1346 43.2794 10.615 42.0552C8.86463 41.4464 7.30529 40.6757 6.14419 39.7209C4.99695 38.7775 3.99999 37.4427 3.99999 35.7391C3.99999 34.8725 4.29264 34.0922 4.49321 33.6393C4.60375 33.3898 4.71348 33.1804 4.79687 33.0311C4.83898 32.9556 4.87547 32.8935 4.9035 32.8471C4.91754 32.8238 4.92954 32.8043 4.93916 32.7889L4.94662 32.777L4.95178 32.7688ZM35.9868 29.004L24 9.77997L12.0131 29.004C12.4661 28.8609 12.9179 28.7342 13.3617 28.6282C16.4281 27.8961 20.0901 27.4783 24 27.4783C27.9099 27.4783 31.5719 27.8961 34.6383 28.6282C35.082 28.7342 35.5339 28.8609 35.9868 29.004Z"
+                    fill="currentColor"
+                  ></path>
+                </svg>
+                <h2 class="user-name">Flavi Dairy Solutions</h2>
+            </div>
+            
+            <div class="nav-menu">
+              <a href="/static/index.html" class="nav-item">
+                <div class="nav-icon">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" viewBox="0 0 256 256">
+                    <path d="M218.83,103.77l-80-75.48a1.14,1.14,0,0,1-.11-.11,16,16,0,0,0-21.53,0l-.11.11L37.17,103.77A16,16,0,0,0,32,115.55V208a16,16,0,0,0,16,16H96a16,16,0,0,0,16-16V160h32v48a16,16,0,0,0,16,16h48a16,16,0,0,0,16-16V115.55A16,16,0,0,0,218.83,103.77ZM208,208H160V160a16,16,0,0,0-16-16H112a16,16,0,0,0-16,16v48H48V115.55l.11-.1L128,40l79.9,75.43.11.1Z"></path>
+                  </svg>
+                </div>
+                <p class="nav-label">Dashboard</p>
+              </a>
+
+              <a href="/static/inventory.html" class="nav-item">
+                <div class="nav-icon">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" viewBox="0 0 256 256">
+                    <path d="M223.68,66.15,135.68,18a15.88,15.88,0,0,0-15.36,0l-88,48.17a16,16,0,0,0-8.32,14v95.64a16,16,0,0,0,8.32,14l88,48.17a15.88,15.88,0,0,0,15.36,0l88-48.17a16,16,0,0,0,8.32-14V80.18A16,16,0,0,0,223.68,66.15ZM128,32l80.34,44-29.77,16.3-80.35-44ZM128,120,47.66,76l33.9-18.56,80.34,44ZM40,90l80,43.78v85.79L40,175.82Zm176,85.78h0l-80,43.79V133.82l32-17.51V152a8,8,0,0,0,16,0V107.55L216,90v85.77Z"></path>
+                  </svg>
+                </div>
+                <p class="nav-label">Inventory</p>
+              </a>
+              
+              <a href="#" class="nav-item active">
+                <div class="nav-icon">
+                  <svg class="menu-icon" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 256 256">
+                    <path d="M216,40H136V24a8,8,0,0,0-16,0V40H40A16,16,0,0,0,24,56V176a16,16,0,0,0,16,16H79.36L57.75,219a8,8,0,0,0,12.5,10l29.59-37h56.32l29.59,37a8,8,0,1,0,12.5-10l-21.61-27H216a16,16,0,0,0,16-16V56A16,16,0,0,0,216,40ZM104,144a8,8,0,0,1-16,0V120a8,8,0,0,1,16,0Zm32,0a8,8,0,0,1-16,0V104a8,8,0,0,1,16,0Zm32,0a8,8,0,0,1-16,0V88a8,8,0,0,1,16,0Z"></path>
+                  </svg>
+                </div>
+                <p class="nav-label">Forecasting</p>
+              </a>
+
+              <a href="/static/about.html" class="nav-item">
+                <div class="nav-icon">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" viewBox="0 0 256 256">
+                    <path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216Zm16-40a8,8,0,0,1-8,8,16,16,0,0,1-16-16V128a8,8,0,0,1,0-16,16,16,0,0,1,16,16v40A8,8,0,0,1,144,176ZM112,84a12,12,0,1,1,12,12A12,12,0,0,1,112,84Z"></path>
+                  </svg>
+                </div>
+                <p class="nav-label">About</p>
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Main Content -->
+        <main class="main-content">
+          <header class="page-header">
+            <div class="header-group">
+              <h1 class="header-title">Demand Forecast – Next 5 Weeks</h1>
+              <p class="header-description">Stay ahead with our demand predictions for the next 5 weeks.</p>
+            </div>
+          </header>
+
+          <div class="loading-container" id="loading">
+            <div class="loading-spinner"></div>
+            <p>Loading forecast data...</p>
+          </div>
+
+          <div class="error-message" id="error-message" style="display: none;">
+            Error loading forecast data. Please try again later.
+          </div>
+
+          <div class="forecast-grid" id="forecastGrid"></div>
+        </main>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function toggleMenu() {
+      const sidebar = document.querySelector('.sidebar');
+      sidebar.classList.toggle('open');
+    }
+
+    async function fetchData() {
+      try {
+        // For demo purposes, we'll use mock data
+        // In production, you would fetch from your API:
+        const res = await fetch("/forecast-summary");
+        if (!res.ok) throw new Error("API fetch failed");
+        return await res.json();
+      } catch (err) {
+        console.error("Error fetching data:", err);
+        document.getElementById('error-message').style.display = 'block';
+        return [];
+      }
+    }
+
+    function createForecastCard(product) {
+      const card = document.createElement('div');
+      card.className = 'forecast-card';
+
+      const header = document.createElement('div');
+      header.className = 'forecast-header';
+      header.innerHTML = `<span class="forecast-icon">${product.product_name[0]}</span>${product.product_name}`;
+
+      const canvas = document.createElement('canvas');
+      canvas.className = 'forecast-canvas';
+      
+      const stats = document.createElement('div');
+      stats.className = 'stats';
+      stats.innerHTML = `
+        <p><span>Inventory:</span> <span>${product.current_stock} ${product.unit}</span></p>
+        <p><span>Forecasted Demand:</span> <span>${product.total_forecasted} ${product.unit}</span></p>
+        <p><span>Inventory Status:</span> <span class="status ${product.stock_level}">${product.stock_level}</span></p>
+      `;
+
+      card.appendChild(header);
+      card.appendChild(canvas);
+      card.appendChild(stats);
+
+      if (product.reorder_needed) {
+        const reorder = document.createElement('div');
+        reorder.className = 'reorder';
+        reorder.innerHTML = `<span>Ensure Availability of ${product.reorder_quantity} ${product.unit} by ${product.reorder_date} as per demand forecast</span>`;
+        card.appendChild(reorder);
+      }
+
+      return card;
+    }
+
+    function renderChart(canvas, product) {
+      const allValues = [...product.past_sales, ...product.forecast];
+      const allLabels = [...product.past_dates, ...product.forecast_dates].map(d => {
+        if (d === "N/A") return "";
+        const date = new Date(d);
+        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      });
+
+      // Get the last index of past data to draw a separator line
+      const lastPastIndex = product.past_sales.length - 1;
+      
+      new Chart(canvas, {
+        type: "line",
+        data: {
+          labels: allLabels,
+          datasets: [
+            {
+              label: "Past Demand",
+              data: product.past_sales,
+              borderColor: "#6b7280", // grey
+              backgroundColor: "rgba(107, 114, 128, 0.1)",
+              tension: 0.4,
+              pointRadius: 0,
+              fill: true,
+            },
+            {
+              label: "Forecasted Demand",
+              data: [...Array(product.past_sales.length).fill(null), ...product.forecast],
+              borderColor: "#3b82f6", // blue
+              backgroundColor: "rgba(59, 130, 246, 0.1)",
+              tension: 0.4,
+              pointRadius: 0,
+              fill: true,
+              borderDash: [4, 4],
+            },
+            {
+              label: "Current Inventory",
+              data: Array(product.past_sales.length + product.forecast.length).fill(product.current_stock),
+              borderColor: '#dc2626',
+              borderWidth: 1,
+              borderDash: [5, 5],
+              pointRadius: 0,
+              fill: false
+            }
+          ],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: true,
+              position: 'top', // or 'bottom'
+              labels: {
+                boxWidth: 12,
+                font: { size: 12 },
+                color: '#374151'
+              }
+            },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  if (context.datasetIndex === 0) {
+                    return `Past Demand: ${context.raw}`;
+                  } else if (context.datasetIndex === 1) {
+                    return `Forecasted Demand: ${context.raw}`;
+                  } else if (context.datasetIndex === 2) {
+                    return `Current Inventory: ${context.raw}`;
+                  }
+                  return context.raw;
+                }
+              }
+            }
+          },
+          scales: {
+            x: {
+              grid: { display: false },
+              ticks: { 
+                maxRotation: 0,
+                minRotation: 0,
+                autoSkip: true,
+                maxTicksLimit: 6
+              }
+            },
+            y: { 
+              display: false,
+              beginAtZero: true 
+            }
+          },
+          interaction: {
+            intersect: false,
+            mode: 'index'
+          }
+        }
+      });
+    }
+
+    async function init() {
+      try {
+        const loading = document.getElementById('loading');
+        const container = document.getElementById("forecastGrid");
+        
+        // Show loading state
+        loading.style.display = 'flex';
+        container.innerHTML = '';
+        
+        const data = await fetchData();
+        
+        // Hide loading state
+        loading.style.display = 'none';
+        
+        if (data.length === 0) {
+          document.getElementById('error-message').style.display = 'block';
+          return;
+        }
+        
+        // Create cards for each product
+        data.forEach(product => {
+          const card = createForecastCard(product);
+          container.appendChild(card);
+          
+          // Render chart after card is added to DOM
+          const canvas = card.querySelector('.forecast-canvas');
+          renderChart(canvas, product);
+        });
+        
+        // Show content with fade-in animation
+        document.querySelector('.main-content').classList.add('visible');
+        
+      } catch (err) {
+        console.error("Initialization error:", err);
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('error-message').style.display = 'block';
+      }
+    }
+
+    window.addEventListener('DOMContentLoaded', init);
+  </script>
+</body>
+</html>
